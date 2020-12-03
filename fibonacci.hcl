@@ -14,9 +14,18 @@ job "fibonacci" {
       # directly to the driver to start the task. The details of configurations
       # are specific to each driver, so please see specific driver
       # documentation for more information.
+
+      // artifact {
+      //     source      = "git@github.com:UnholyDk/coursework.git"
+      //     destination = "local/repo"
+      //   options {
+      //     sshkey = "${base64encode(file(pathexpand("~/.ssh/id_rsa")))}"
+      //   }
+      // }
+
       config {
         command = "python3"
-        args = ["script.py"]
+        args = ["/Users/niyaz/forStudy/coursework/script.py"]
       }
 
       resources {

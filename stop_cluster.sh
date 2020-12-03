@@ -1,3 +1,3 @@
 #!/bin/bash
 
-kill $(ps | grep "nomad agent" | awk '{print $1}')
+kill $(ps aux | grep "nomad agent" | awk '{print $1}')
