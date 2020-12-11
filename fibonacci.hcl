@@ -1,6 +1,8 @@
 job "fibonacci" {
 
   datacenters = ["dc1"]
+  
+  type = "batch"
 
   group "python" {
     count = 1
@@ -15,17 +17,14 @@ job "fibonacci" {
       # are specific to each driver, so please see specific driver
       # documentation for more information.
 
-      // artifact {
-      //     source      = "git@github.com:UnholyDk/coursework.git"
-      //     destination = "local/repo"
-      //   options {
-      //     sshkey = "${base64encode(file(pathexpand("~/.ssh/id_rsa")))}"
-      //   }
-      // }
+      artifact {
+        source      = "git::https://github.com/UnholyDk/data.git"
+        destination = "local/repo"
+      }
 
       config {
         command = "python3"
-        args = ["/Users/niyaz/forStudy/coursework/script.py"]
+        args = ["local/repo/fibonacci_number.py"]
       }
 
       resources {
