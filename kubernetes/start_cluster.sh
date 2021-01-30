@@ -7,3 +7,6 @@ then
 else
     echo "error"
 fi
+
+./get_volcano.sh
+kubectl proxy --port=8080 &

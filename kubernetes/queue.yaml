@@ -4,6 +4,6 @@ metadata:
   name: test
 spec:
   weight: 1
-  reclaimable: false
+  reclaimable: true
   capability:
     cpu: 2

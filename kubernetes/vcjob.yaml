@@ -1,20 +1,14 @@
 apiVersion: batch.volcano.sh/v1alpha1
 kind: Job
 metadata:
-  name: job-1
+  name: job1
 spec:
   minAvailable: 1
   schedulerName: volcano
-  queue: test
-  policies:
-    - event: PodEvicted
-      action: RestartJob
+  queue: great-queue
   tasks:
     - replicas: 1
       name: python
-      policies:
-      - event: TaskCompleted
-        action: CompleteJob
       template:
         spec:
           containers:
