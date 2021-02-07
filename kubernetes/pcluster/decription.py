@@ -3,6 +3,29 @@ from typing import List
 
 
 @dataclasses.dataclass
+class VolumeMountsSpec:
+    name: str
+    mount_path: str
+
+
+@dataclasses.dataclass
+class ResourceSpec:
+    memory: str = None
+    cpu: str = None
+
+
+@dataclasses.dataclass
+class ContainerSpec:
+    name: str
+    image: str
+    command: List[str]
+    volume_mounts: VolumeMountsSpec = None
+
+    resourses_requests: ResourceSpec = None
+    resourses_limit: ResourceSpec = None
+
+
+@dataclasses.dataclass
 class QueueSpec:
     # Queue name
     name: str
@@ -18,8 +41,7 @@ class QueueSpec:
 
     # Capability indicates the upper limit of resources the queue can use.
     # It is a hard constraint.
-    cpu: int = None
-    memory: str = None # Example value: "4096Mi", "4Gi"
+    capability: ResourceSpec = None
 
     def __post_init__(self):
         """Post init validation checks."""
@@ -28,13 +50,29 @@ class QueueSpec:
 
 @dataclasses.dataclass
 class TaskSpec:
-    pass
 
+    # Name specifies the name of task
+    name: str
+
+    containers: List[ContainerSpec]
+
+    # Replicas specifies the replicas of this TaskSpec in Job
+    replicas: int = 1
+    volume_name: str = None
+    claim_name: str = None
+
+    def __post__init__(self):
+        assert self.name, "The task must have a name"
+        assert len(self.containers) > 0, "Task has no containers"
+    
 
 @dataclasses.dataclass
 class JobSpec:
     # Job name
     name: str
+
+    # Tasks specifies the task specification of Job
+    tasks: List[TaskSpec]
 
     # The minimal available pods to run for this Job
 	# Defaults to the summary of tasks' replicas
@@ -48,12 +86,9 @@ class JobSpec:
     # "default" queue is used this leaves empty.
     queue: str = "default"
 
-    # Specifies the maximum number of retries before marking this Job failed. 
-    # Defaults to 3.
-    max_retry: int = 3
-
-    # Tasks specifies the task specification of Job
-    tasks: List[TaskSpec]
+    # # Specifies the maximum number of retries before marking this Job failed. 
+    # # Defaults to 3.
+    # max_retry: int = 3
 
     def __post_init__(self):
         """Post init validation checks."""
@@ -63,5 +98,3 @@ class JobSpec:
         
         if self.min_available is None:
             self.min_available = len(self.tasks)
-
-

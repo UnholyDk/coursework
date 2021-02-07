@@ -9,4 +9,7 @@ else
 fi
 
 ./get_volcano.sh
-kubectl proxy --port=8080 &
+kubectl apply -f queue.yaml
+kubectl apply -f persistent_volume.yaml
+kubectl apply -f pv-claim.yaml
+kubectl proxy --port=8080
