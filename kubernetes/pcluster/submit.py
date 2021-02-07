@@ -111,7 +111,7 @@ def delete_job(job_name: str, client):
 def status_job(job_name: str, client):
     try:
         api_response = client.get_namespaced_custom_object_status(GROUP, VERSION, NAMESPACE, PLURAL, job_name)
-        return api_response['status']
+        return api_response['status']['state']['phase']
     except ApiException as e:
         BaseException("Exception when calling CustomObjectsApi->get_namespaced_custom_object_status: %s\n" % e)
 
@@ -142,3 +142,12 @@ def delete_task(pod_name: str, client):
         return api_response
     except ApiException as e:
         raise BaseException("Exception when calling CoreV1Api->delete_namespaced_pod: %s\n" % e)
+
+
+def get_stdout_task(pod_name: str, client):
+    try:
+        api_response = client.read_namespaced_pod_log(
+            pod_name, NAMESPACE)
+        return api_response
+    except ApiException as e:
+        raise BaseException("Exception when calling CoreV1Api->read_namespaced_pod_log: %s\n" % e)

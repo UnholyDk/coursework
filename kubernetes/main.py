@@ -53,37 +53,66 @@ job1 = JobSpec(
 )
 
 
+# CREATE JOB
+response = submit_job(job_spec_to_dict(job1), custom_object_api)
+print('Job successful created with uid: %s' % response['metadata']['uid'])
 
-# response = submit_job(job_spec_to_dict(job1), custom_object_api)
-# print('Job successful created with uid: %s' % response['metadata']['uid'])
-
-# print('Sleeping 6 second ...')
-# time.sleep(6)
-
-# response = status_job(NAME_JOB, custom_object_api)['state']['phase']
-# print('Status job: %s' % status_job(NAME_JOB, custom_object_api)['state']['phase'])
-# print('-' * 20)
+# SLEEP
+print('Sleeping 2 second ...')
+time.sleep(2)
 
 
-# print('Sleeping 3 second ...')
-# time.sleep(3)
-# print('Status job: %s' % status_job(NAME_JOB, custom_object_api)['state']['phase'])
-# print('-' * 20)
-
-response = get_pod_name_by_task_name('task2-name', core_api)
-pprint(response)
-
-response = delete_task(response, core_api)
-pprint(response)
-
-# print('Sleeping 5 second ...')
-# time.sleep(5)
-# print('Status job: %s' % status_job(NAME_JOB, custom_object_api)['state']['phase'])
-# print('-' * 20)
+# GET POD NAMES
+pod_name_task1 = get_pod_name_by_task_name('task1-name', core_api)
+pod_name_task2 = get_pod_name_by_task_name('task2-name', core_api)
 
 
-# print('Sleeping 3 second ...')
-# time.sleep(3)
+# SLEEP
+print('Sleeping 6 second ...')
+time.sleep(6)
 
-# response = delete_job('job-name', custom_object_api)
-# print('Job deleted with status: %s' % response['status'])
+
+# GET STATUS JOB, TASKS
+print('Status job: %s' % status_job(NAME_JOB, custom_object_api))
+print('Status task1: %s' % status_task(pod_name_task1, core_api))
+print('Status task2: %s' % status_task(pod_name_task2, core_api))
+print('-' * 20)
+
+
+# SLEEP
+print('Sleeping 3 second ...')
+time.sleep(3)
+
+
+# GET STATUS JOB, TASKS
+print('Status job: %s' % status_job(NAME_JOB, custom_object_api))
+print('Status task1: %s' % status_task(pod_name_task1, core_api))
+print('Status task2: %s' % status_task(pod_name_task2, core_api))
+print('-' * 20)
+
+
+# SLEEP
+print('Sleeping 5 second ...')
+time.sleep(5)
+
+
+# GET STATUS JOB
+print('Status job: %s' % status_job(NAME_JOB, custom_object_api))
+print('Status task1: %s' % status_task(pod_name_task1, core_api))
+print('Status task2: %s' % status_task(pod_name_task2, core_api))
+print('-' * 20)
+
+
+# SLEEP
+print('Sleeping 3 second ...\n')
+time.sleep(3)
+
+
+# OUTPUT TASKs
+print('stdout task1:\n%s' % get_stdout_task(pod_name_task1, core_api))
+print('stdout task2:\n%s' % get_stdout_task(pod_name_task2, core_api))
+
+
+
+response = delete_job('job-name', custom_object_api)
+print('Job deleted with status: %s' % response['status'])

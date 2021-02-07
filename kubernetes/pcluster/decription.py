@@ -4,7 +4,13 @@ from typing import List
 
 @dataclasses.dataclass
 class VolumeMountsSpec:
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#volumemount-v1-core
+
+    # This must match the Name of a Volume.
     name: str
+
+    # Path within the container at which the volume should be mounted.
+    # Must not contain ':'.
     mount_path: str
 
 
@@ -16,11 +22,31 @@ class ResourceSpec:
 
 @dataclasses.dataclass
 class ContainerSpec:
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#container-v1-core
+
+    # Name of the container specified as a DNS_LABEL. 
+    # Each container in a pod must have a unique name (DNS_LABEL)
     name: str
+
+    # Docker image name.
     image: str
+
+    # Entrypoint array. Not executed within a shell. 
+    # The docker image's ENTRYPOINT is used if this is not provided.
+    # Variable references $(VAR_NAME) are expanded using the container's environment.
+    # If a variable cannot be resolved, the reference in the input string will be unchanged.
+    # The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME).
+    # Escaped references will never be expanded, regardless of whether the variable exists or not.
+    # Cannot be updated. More info:
+    # https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
     command: List[str]
+
+    # Pod volumes to mount into the container's filesystem.
     volume_mounts: VolumeMountsSpec = None
 
+    # Compute Resources required by this container
+    # More info:
+    # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
     resourses_requests: ResourceSpec = None
     resourses_limit: ResourceSpec = None
 
@@ -85,10 +111,6 @@ class JobSpec:
     # Specifies the queue that will be used in the scheduler, 
     # "default" queue is used this leaves empty.
     queue: str = "default"
-
-    # # Specifies the maximum number of retries before marking this Job failed. 
-    # # Defaults to 3.
-    # max_retry: int = 3
 
     def __post_init__(self):
         """Post init validation checks."""
