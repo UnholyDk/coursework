@@ -42,34 +42,31 @@ task1 = TaskSpec(
     ]
 )
 
-# task2 = TaskSpec(
-#     name='task2-name',
-#     volume_name='storage',
-#     claim_name='dir-data-claim',
-#     containers=[
-#         ContainerSpec(
-#             name='container2-name',
-#             exec=["python3", "-c", "import time; print(time.ctime()); time.sleep(5); print('OK')"],
-#             volume_mounts=VolumeMountsSpec(name='storage', mount_path='/logs')
-#         )
-#     ]
-# )
 
-NAME_JOB = 'j'
-
-job1 = JobSpec(
-    name=NAME_JOB,
-    tasks=[task1],
-    queue='test'
-)
+NAME_JOB = 'job'
 
 pprint(features(RUNENVS))
 
-pprint(job_spec_to_dict(job1))
+for i in range(10):
+    job = JobSpec(
+        name=NAME_JOB + str(i),
+        tasks=[task1],
+        queue='test'
+    )
+    response = submit_job(job_spec_to_dict(job), custom_object_api)
+    print('Job successful created with name: %s' % response['metadata']['name'])
 
-# CREATE JOB
-response = submit_job(job_spec_to_dict(job1), custom_object_api)
-print('Job successful created with uid: %s' % response['metadata']['uid'])
+completed = 0
+
+for i in range(10):
+    while status_job(NAME_JOB+str(i), custom_object_api) != 'Completed':
+        continue
+    print('%s%d is Completed' % (NAME_JOB, i))
+
+
+# # CREATE JOB
+# response = submit_job(job_spec_to_dict(job1), custom_object_api)
+# print('Job successful created with uid: %s' % response['metadata']['uid'])
 
 # # SLEEP
 # print('Sleeping 2 second ...')
