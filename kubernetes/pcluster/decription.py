@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List
+from typing import List, Tuple, Optional, Dict
 
 
 @dataclasses.dataclass
@@ -15,21 +15,12 @@ class VolumeMountsSpec:
 
 
 @dataclasses.dataclass
-class ResourceSpec:
-    memory: str = None
-    cpu: str = None
-
-
-@dataclasses.dataclass
 class ContainerSpec:
     # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#container-v1-core
 
     # Name of the container specified as a DNS_LABEL. 
     # Each container in a pod must have a unique name (DNS_LABEL)
     name: str
-
-    # Docker image name.
-    image: str
 
     # Entrypoint array. Not executed within a shell. 
     # The docker image's ENTRYPOINT is used if this is not provided.
@@ -39,22 +30,56 @@ class ContainerSpec:
     # Escaped references will never be expanded, regardless of whether the variable exists or not.
     # Cannot be updated. More info:
     # https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
-    command: List[str]
+    exec: List[str]
 
-    # Pod volumes to mount into the container's filesystem.
-    volume_mounts: VolumeMountsSpec = None
+    owner: int
+
+    # Environment variables for the task: name:value.
+    env: Dict[str, str]
+
+
+    runenv: Tuple[str, int]
+    require: Optional[Tuple[str, Optional[str]]]
 
     # Compute Resources required by this container
     # More info:
     # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
-    resourses_requests: ResourceSpec = None
-    resourses_limit: ResourceSpec = None
+    cpu: float
+    memory: int
 
+    storage: Dict[str, str]
+
+    # Directory to run task in. None runs it in a temporary directory.
+    cwd: Optional[str] = None
+
+    os: str = "Linux"
+
+
+    # Pod volumes to mount into the container's filesystem.
+    volume_mounts: VolumeMountsSpec = None
+
+    extension_node: Optional[str] = None
+    image: str = None
+
+    def __post_init__(self):
+        """Post init validation checks."""
+        assert self.exec, "Path to the task executable is missing!"
+        self.image = \
+            f'pseven-calc-{self.runenv[0].lower()}-{self.runenv[1]}-{self.require[0].lower()}-{self.require[1]}'
+        for key in self.storage:
+            self.env[f'DA__P7__PCLUSTER__STORAGE__{key}'] = self.storage[key]
+        assert 1 <= self.owner <= 9999, "User ID must be between 1 and 9999"
+        
 
 @dataclasses.dataclass
 class QueueSpec:
     # Queue name
     name: str
+
+    # Capability indicates the upper limit of resources the queue can use.
+    # It is a hard constraint.
+    cpu: float
+    memory: int
 
     # The weight of queue to share the resources with each other.
     # Weight indicates the relative weight of a queue in cluster resource division.
@@ -65,9 +90,6 @@ class QueueSpec:
     # resources than allocated. The default value is true.
     reclaimable: bool = True
 
-    # Capability indicates the upper limit of resources the queue can use.
-    # It is a hard constraint.
-    capability: ResourceSpec = None
 
     def __post_init__(self):
         """Post init validation checks."""
@@ -87,7 +109,7 @@ class TaskSpec:
     volume_name: str = None
     claim_name: str = None
 
-    def __post__init__(self):
+    def __post_init__(self):
         assert self.name, "The task must have a name"
         assert len(self.containers) > 0, "Task has no containers"
     

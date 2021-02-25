@@ -12,7 +12,8 @@ queue = {
         "capability" : {
             "cpu": 2
         }
-    }
+    },
+    "status": {"state": "Open"}
 }
 
 configuration = kubernetes.client.Configuration()

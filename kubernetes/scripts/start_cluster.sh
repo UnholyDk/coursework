@@ -1,5 +1,5 @@
 #!/bin/bash
-minikube start --vm-driver=virtualbox
+minikube start
 minikube status
 if [ $? -eq 0 ]
 then

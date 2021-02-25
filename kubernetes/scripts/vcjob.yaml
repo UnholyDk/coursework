@@ -5,7 +5,6 @@ metadata:
 spec:
   minAvailable: 1
   schedulerName: volcano
-  queue: great-queue
   tasks:
     - replicas: 1
       name: python

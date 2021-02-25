@@ -2,8 +2,10 @@ apiVersion: scheduling.volcano.sh/v1beta1
 kind: Queue
 metadata:
   name: test
+  namespace: default
 spec:
   weight: 1
   reclaimable: true
   capability:
-    cpu: 2
+    cpu: "2"
+    memory: "2048Mi"
