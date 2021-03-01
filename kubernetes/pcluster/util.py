@@ -1,7 +1,5 @@
-from .decription import JobSpec, TaskSpec, ContainerSpec, VolumeMountsSpec
 from typing import Dict
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+from .decription import ContainerSpec, TaskSpec, JobSpec
 
 
 NAMESPACE = 'default'
@@ -35,9 +33,10 @@ def container_spec_to_dict(container_spec: ContainerSpec) -> Dict:
     if container_spec.volume_mounts is not None:
         container['volumeMounts'] = []
         volume_mount = {}
-        volume_mount['name'] = container_spec.volume_mounts.name
-        volume_mount['mountPath'] = container_spec.volume_mounts.mount_path
-        container['volumeMounts'].append(volume_mount)
+        for name in container_spec.volume_mounts:
+            volume_mount['name'] = name
+            volume_mount['mountPath'] = container_spec.volume_mounts[name]
+            container['volumeMounts'].append(volume_mount)
     
     container['env'] = []
     for env_name in container_spec.env:

@@ -1,67 +1,69 @@
-from pcluster.interface import *
-from pcluster.decription import TaskSpec, JobSpec, VolumeMountsSpec, ContainerSpec
-from pcluster.util import job_spec_to_dict
-
 from pprint import pprint
 import time
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+import pcluster
 
 
-configuration = client.Configuration()
+configuration = pcluster.client.Configuration()
 configuration.host = "http://localhost:8080"
 
-with client.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    custom_object_api = client.CustomObjectsApi(api_client)
-    core_api = client.CoreV1Api(api_client)
+with pcluster.client.ApiClient(configuration) as api_client:
+	custom_object_api = pcluster.client.CustomObjectsApi(api_client)
+	core_api = pcluster.client.CoreV1Api(api_client)
 
-container = ContainerSpec(
-            name='container1-name',
-            exec=["sh", "-c", "echo `date` | tee -a /logs/hello.txt"],
-            volume_mounts=VolumeMountsSpec(name='storage', mount_path='/logs'),
-            owner=42,
-            env = {},
-            runenv=('COBOL', 42),
-            require=('NX', 2020),
-            cpu=1,
-            memory=512e6,
-            storage={'NAME': '/users'}
-        )
+container = pcluster.ContainerSpec(
+			name='container1-name',
+			exec=["sh", "-c", "echo `date` | tee -a /logs/hello.txt"],
+			volume_mounts={'storage': '/logs'},
+			owner=42,
+			env = {},
+			runenv=('COBOL', 42),
+			require=('NX', 2020),
+			cpu=1,
+			memory=512e6,
+			storage={'NAME': '/users'}
+		)
 
 container.image = 'python'
 
-print(container)
-
-task1 = TaskSpec(
-    name='task1-name',
-    volume_name='storage',
-    claim_name='dir-data-claim',
-    containers=[
-        container
-    ]
+task1 = pcluster.TaskSpec(
+	name='task1-name',
+	volume_name='storage',
+	claim_name='dir-data-claim',
+	containers=[
+		container
+	]
 )
 
 
 NAME_JOB = 'job'
 
-pprint(features(RUNENVS))
+pprint(pcluster.features(pcluster.RUNENVS))
+
+client = pcluster.Client(custom_object_api, core_api)
 
 for i in range(10):
-    job = JobSpec(
-        name=NAME_JOB + str(i),
-        tasks=[task1],
-        queue='test'
-    )
-    response = submit_job(job_spec_to_dict(job), custom_object_api)
-    print('Job successful created with name: %s' % response['metadata']['name'])
+	job = pcluster.JobSpec(
+		name=NAME_JOB + str(i),
+		tasks=[task1],
+		queue='test'
+	)
+	response = client.submit_job(job)
+	print('Job successful created with name: %s' % response['metadata']['name'])
 
 completed = 0
 
+begin = time.time()
+
 for i in range(10):
-    while status_job(NAME_JOB+str(i), custom_object_api) != 'Completed':
-        continue
-    print('%s%d is Completed' % (NAME_JOB, i))
+	while client.status_job(NAME_JOB+str(i)) != 'Completed':
+		if time.time() - begin > 120:
+			break
+		time.sleep(1)
+	else:
+		completed += 1
+		print('%s%d is Completed' % (NAME_JOB, i))
+
+assert completed == 10, "Not all jobs completed"
 
 
 # # CREATE JOB

@@ -2,16 +2,16 @@ import dataclasses
 from typing import List, Tuple, Optional, Dict
 
 
-@dataclasses.dataclass
-class VolumeMountsSpec:
-    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#volumemount-v1-core
+# @dataclasses.dataclass
+# class VolumeMountsSpec:
+#     # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#volumemount-v1-core
 
-    # This must match the Name of a Volume.
-    name: str
+#     # This must match the Name of a Volume.
+#     name: str
 
-    # Path within the container at which the volume should be mounted.
-    # Must not contain ':'.
-    mount_path: str
+#     # Path within the container at which the volume should be mounted.
+#     # Must not contain ':'.
+#     mount_path: str
 
 
 @dataclasses.dataclass
@@ -56,7 +56,7 @@ class ContainerSpec:
 
 
     # Pod volumes to mount into the container's filesystem.
-    volume_mounts: VolumeMountsSpec = None
+    volume_mounts: Dict[str, str] = None
 
     extension_node: Optional[str] = None
     image: str = None
