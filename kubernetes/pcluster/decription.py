@@ -1,6 +1,13 @@
+"""
+Description of the entities that are needed for the pcluster
+"""
+
 import dataclasses
 from typing import List, Tuple, Optional, Dict
 
+PENDING = 'Pending'
+RUNNING = 'Running'
+COMPLETED = 'Completed'
 
 # @dataclasses.dataclass
 # class VolumeMountsSpec:
@@ -15,7 +22,8 @@ from typing import List, Tuple, Optional, Dict
 
 
 @dataclasses.dataclass
-class ContainerSpec:
+class ExecutorSpec:
+    """Executor specification."""
     # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#container-v1-core
 
     # Name of the container specified as a DNS_LABEL. 
@@ -73,6 +81,7 @@ class ContainerSpec:
 
 @dataclasses.dataclass
 class QueueSpec:
+    """Queue specification."""
     # Queue name
     name: str
 
@@ -98,11 +107,11 @@ class QueueSpec:
 
 @dataclasses.dataclass
 class TaskSpec:
-
+    """Task specification."""
     # Name specifies the name of task
     name: str
 
-    containers: List[ContainerSpec]
+    container: ExecutorSpec
 
     # Replicas specifies the replicas of this TaskSpec in Job
     replicas: int = 1
@@ -116,6 +125,7 @@ class TaskSpec:
 
 @dataclasses.dataclass
 class JobSpec:
+    """Job specification."""
     # Job name
     name: str
 
