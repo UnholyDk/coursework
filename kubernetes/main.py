@@ -1,3 +1,8 @@
+"""
+Examples of using the module pcluster, Usage
+Tests
+"""
+
 from pprint import pprint
 import time
 import pcluster
@@ -10,7 +15,7 @@ with pcluster.client.ApiClient(configuration) as api_client:
 	custom_object_api = pcluster.client.CustomObjectsApi(api_client)
 	core_api = pcluster.client.CoreV1Api(api_client)
 
-container = pcluster.ContainerSpec(
+container = pcluster.ExecutorSpec(
 			name='container1-name',
 			exec=["sh", "-c", "echo `date` | tee -a /logs/hello.txt"],
 			volume_mounts={'storage': '/logs'},
@@ -29,9 +34,7 @@ task1 = pcluster.TaskSpec(
 	name='task1-name',
 	volume_name='storage',
 	claim_name='dir-data-claim',
-	containers=[
-		container
-	]
+	container=container
 )
 
 
@@ -55,7 +58,7 @@ completed = 0
 begin = time.time()
 
 for i in range(10):
-	while client.status_job(NAME_JOB+str(i)) != 'Completed':
+	while client.status_job(NAME_JOB+str(i)) != pcluster.TaskState.COMPLETED:
 		if time.time() - begin > 120:
 			break
 		time.sleep(1)

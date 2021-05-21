@@ -120,7 +120,7 @@ class TaskSpec:
 
     def __post_init__(self):
         assert self.name, "The task must have a name"
-        assert len(self.containers) > 0, "Task has no containers"
+        assert self.container, "Task has no container"
     
 
 @dataclasses.dataclass
