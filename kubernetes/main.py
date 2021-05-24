@@ -8,41 +8,24 @@ import time
 import pcluster
 
 
-configuration = pcluster.client.Configuration()
-configuration.host = "http://localhost:8080"
-
-with pcluster.client.ApiClient(configuration) as api_client:
-	custom_object_api = pcluster.client.CustomObjectsApi(api_client)
-	core_api = pcluster.client.CoreV1Api(api_client)
-
-container = pcluster.ExecutorSpec(
-			name='container1-name',
-			exec=["sh", "-c", "echo `date` | tee -a /logs/hello.txt"],
-			volume_mounts={'storage': '/logs'},
-			owner=42,
-			env = {},
-			runenv=('COBOL', 42),
-			require=('NX', 2020),
-			cpu=1,
-			memory=512e6,
-			storage={'NAME': '/users'}
-		)
-
-container.image = 'python'
-
 task1 = pcluster.TaskSpec(
 	name='task1-name',
 	volume_name='storage',
 	claim_name='dir-data-claim',
-	container=container
+	exec=["sh", "-c", "echo `date` | tee -a /logs/hello.txt"],
+	volume_mounts={'storage': '/logs'},
+	owner=42,
+	env = {},
+	runenv=('COBOL', 42),
+	require=('NX', 2020),
+	cpu=1,
+	memory=512e6,
+	storage={'NAME': '/users'}
 )
-
 
 NAME_JOB = 'job'
 
 pprint(pcluster.features(pcluster.RUNENVS))
-
-client = pcluster.Client(custom_object_api, core_api)
 
 for i in range(10):
 	job = pcluster.JobSpec(
@@ -50,7 +33,7 @@ for i in range(10):
 		tasks=[task1],
 		queue='test'
 	)
-	response = client.submit_job(job)
+	response = pcluster.submit_job(job)
 	print('Job successful created with name: %s' % response['metadata']['name'])
 
 completed = 0
@@ -58,7 +41,7 @@ completed = 0
 begin = time.time()
 
 for i in range(10):
-	while client.status_job(NAME_JOB+str(i)) != pcluster.TaskState.COMPLETED:
+	while pcluster.status_job(NAME_JOB+str(i)) != pcluster.TaskState.COMPLETED:
 		if time.time() - begin > 120:
 			break
 		time.sleep(1)

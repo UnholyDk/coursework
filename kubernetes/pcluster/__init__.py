@@ -2,7 +2,14 @@
 Resources manager API.
 """
 
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
-from .interface import *
-from .decription import TaskSpec, JobSpec, ExecutorSpec
+from .interface import (
+    TaskState,
+    submit_job,
+    delete_job,
+    status_job,
+    status_task,
+    get_stdout_task,
+    features
+)
+from .decription import TaskSpec, JobSpec
+from .config import *
