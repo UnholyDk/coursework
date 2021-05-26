@@ -4,11 +4,14 @@ for calls to different methods associated with jobs and tasks
 """
 
 from .decription import TaskSpec, JobSpec
-from .decription import PENDING, RUNNING, COMPLETED
 from kubernetes.client.rest import ApiException
 from .config import *
 from typing import Dict
 import enum
+
+PENDING = 'Pending'
+RUNNING = 'Running'
+COMPLETED = 'Completed'
 
 class TaskState(enum.Enum):
     """Task states.
@@ -24,33 +27,31 @@ class TaskState(enum.Enum):
     COMPLETED = enum.auto()
 
 
-def _task_spec_to_k8s_spec(task_spec: TaskSpec, job_name: str) -> Dict:
+def _task_spec_to_k8s_spec(task_spec: TaskSpec, job_spec: JobSpec) -> Dict:
     """
     A function that an object of the taskspec class writes to a dictionary
     for further sending an api request
     """
     task = {}
     task['name'] = task_spec.name
-    task['replicas'] = task_spec.replicas
+    task['replicas'] = 1
     task['template'] = {'spec': {'containers': [], 'restartPolicy': 'Never'}}
 
     
     task['template']['metadata'] = {}
     task['template']['metadata']['labels'] = {
         'task-name': task_spec.name,
-        'job-name': job_name}
+        'job-name': job_spec.name}
 
-    if task_spec.volume_name is not None:
-        volume = {}
-        volume['name'] = task_spec.volume_name
-        volume['persistentVolumeClaim'] = {'claimName': task_spec.claim_name}
-        task['template']['spec']['volumes'] = [volume]
+    volume = {}
+    volume['name'] = VOLUME_NAME
+    volume['persistentVolumeClaim'] = {'claimName': CLAIM_NAME}
+    task['template']['spec']['volumes'] = [volume]
 
     container = {}
     container['command'] = task_spec.exec
     container['image'] = \
-        'python' # <------ TODO FIX
-        #f'pseven-calc-{task_spec.runenv[0].lower()}-{task_spec.runenv[1]}-{task_spec.require[0].lower()}-{task_spec.require[1]}'
+        f'pseven-calc-{task_spec.runenv[0].lower()}-{task_spec.runenv[1]}-{task_spec.require[0].lower()}-{task_spec.require[1]}'
     container['name'] = task_spec.name
 
     container['resources'] = {}
@@ -64,13 +65,12 @@ def _task_spec_to_k8s_spec(task_spec: TaskSpec, job_name: str) -> Dict:
         container['resources']['limits']['memory'] = task_spec.memory
         container['resources']['requests']['memory'] = RATIO_LIMIT_RESOURCES_TO_REQUESTS * task_spec.memory
 
-    if task_spec.volume_mounts is not None:
-        container['volumeMounts'] = []
-        volume_mount = {}
-        for name in task_spec.volume_mounts:
-            volume_mount['name'] = name
-            volume_mount['mountPath'] = task_spec.volume_mounts[name]
-            container['volumeMounts'].append(volume_mount)
+    container['volumeMounts'] = []
+    volume_mount = {}
+    for path in task_spec.storage.values():
+        volume_mount['name'] = VOLUME_NAME
+        volume_mount['mountPath'] = path
+        container['volumeMounts'].append(volume_mount)
     
     container['env'] = []
     for env_name in task_spec.env:
@@ -86,8 +86,8 @@ def _task_spec_to_k8s_spec(task_spec: TaskSpec, job_name: str) -> Dict:
         container['env'].append(key_value)
     
     container['securityContext'] = {}
-    container['securityContext']['runAsGroup'] = task_spec.owner + 20000
-    container['securityContext']['runAsUser'] = task_spec.owner + 20000
+    container['securityContext']['runAsGroup'] = job_spec.owner + 20000
+    container['securityContext']['runAsUser'] = job_spec.owner + 20000
     container['securityContext']['runAsNonRoot'] = True
     container['securityContext']['allowPrivilegeEscalation'] = False
 
@@ -108,13 +108,13 @@ def _job_spec_to_k8s_spec(job_spec: JobSpec) -> Dict:
     job['kind'] = KIND
     job['metadata'] = {'name': job_spec.name, 'namespace': NAMESPACE}
     job['spec'] = {}
-    job['spec']['minAvailable'] = job_spec.min_available
-    job['spec']['queue'] = job_spec.queue
-    job['spec']['schedulerName'] = job_spec.scheduler_name
+    job['spec']['minAvailable'] = len(job_spec.tasks)
+    job['spec']['queue'] = QUEUE
+    job['spec']['schedulerName'] = SCHEDULER
     job['spec']['tasks'] = []
 
     for task_spec in job_spec.tasks:
-        task = _task_spec_to_k8s_spec(task_spec, job_spec.name)
+        task = _task_spec_to_k8s_spec(task_spec, job_spec)
         job['spec']['tasks'].append(task)
     
     return job

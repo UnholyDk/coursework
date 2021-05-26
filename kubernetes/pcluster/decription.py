@@ -5,10 +5,6 @@ Description of the entities that are needed for the pcluster
 import dataclasses
 from typing import List, Tuple, Optional, Dict
 
-PENDING = 'Pending'
-RUNNING = 'Running'
-COMPLETED = 'Completed'
-
 
 @dataclasses.dataclass
 class TaskSpec:
@@ -26,8 +22,6 @@ class TaskSpec:
     # https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
     exec: List[str]
 
-    owner: int
-
     # Environment variables for the task: name:value.
     env: Dict[str, str]
 
@@ -42,9 +36,6 @@ class TaskSpec:
     cpu: float
     memory: int
 
-    # Pod volumes to mount into the container's filesystem.
-    volume_mounts: Dict[str, str] = None
-
     # Directory to run task in. None runs it in a temporary directory.
     cwd: Optional[str] = None
 
@@ -52,15 +43,9 @@ class TaskSpec:
 
     extension_node: Optional[str] = None
 
-    # Replicas specifies the replicas of this TaskSpec in Job
-    replicas: int = 1
-    volume_name: str = None
-    claim_name: str = None
-
     def __post_init__(self):
         assert self.name, "The task must have a name"
         assert self.exec, "Path to the task executable is missing!"
-        assert 1 <= self.owner <= 9999, "User ID must be between 1 and 9999"
     
 
 @dataclasses.dataclass
@@ -72,23 +57,10 @@ class JobSpec:
     # Tasks specifies the task specification of Job
     tasks: List[TaskSpec]
 
-    # The minimal available pods to run for this Job
-	# Defaults to the summary of tasks' replicas
-    min_available: int = None
-
-    # schedulerName indicates the scheduler that will schedule the job. 
-    # Currently, the value can be volcano or default-scheduler, withvolcano` selected by default.
-    scheduler_name: str = "volcano"
-
-    # Specifies the queue that will be used in the scheduler, 
-    # "default" queue is used this leaves empty.
-    queue: str = "default"
+    owner: int
 
     def __post_init__(self):
         """Post init validation checks."""
         assert self.name, "The Job must have a name"
-
+        assert 1 <= self.owner <= 9999, "User ID must be between 1 and 9999"
         assert len(self.tasks) > 0, "Job has no tasks"
-        
-        if self.min_available is None:
-            self.min_available = len(self.tasks)

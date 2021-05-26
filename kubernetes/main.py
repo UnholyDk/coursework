@@ -10,17 +10,13 @@ import pcluster
 
 task1 = pcluster.TaskSpec(
 	name='task1-name',
-	volume_name='storage',
-	claim_name='dir-data-claim',
-	exec=["sh", "-c", "echo `date` | tee -a /logs/hello.txt"],
-	volume_mounts={'storage': '/logs'},
-	owner=42,
+	exec=["sh", "-c", "cat /logs/hello.txt"],
 	env = {},
 	runenv=('COBOL', 42),
 	require=('NX', 2020),
-	cpu=1,
-	memory=512e6,
-	storage={'NAME': '/users'}
+	cpu=0.1,
+	memory=128e6,
+	storage={'NAME': '/logs'}
 )
 
 NAME_JOB = 'job'
@@ -31,18 +27,19 @@ for i in range(10):
 	job = pcluster.JobSpec(
 		name=NAME_JOB + str(i),
 		tasks=[task1],
-		queue='test'
+		owner=42
 	)
 	response = pcluster.submit_job(job)
 	print('Job successful created with name: %s' % response['metadata']['name'])
 
 completed = 0
 
+time.sleep(1)
 begin = time.time()
 
 for i in range(10):
 	while pcluster.status_job(NAME_JOB+str(i)) != pcluster.TaskState.COMPLETED:
-		if time.time() - begin > 120:
+		if time.time() - begin > 1000:
 			break
 		time.sleep(1)
 	else:
@@ -107,9 +104,9 @@ assert completed == 10, "Not all jobs completed"
 # time.sleep(3)
 
 
-# # OUTPUT TASKs
-# print('stdout task1:\n%s' % get_stdout_task(pod_name_task1, core_api))
-# print('stdout task2:\n%s' % get_stdout_task(pod_name_task2, core_api))
+# OUTPUT TASKs
+print('stdout task1:\n%s' % pcluster.get_stdout_task('task1-name', 'job0'))
+print('stdout task2:\n%s' % pcluster.get_stdout_task('task1-name', 'job1'))
 
 
 

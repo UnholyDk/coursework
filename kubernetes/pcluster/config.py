@@ -18,6 +18,17 @@ KIND = 'Job'
 
 RATIO_LIMIT_RESOURCES_TO_REQUESTS = 1
 
+# schedulerName indicates the scheduler that will schedule the job. 
+# Currently, the value can be volcano or default-scheduler, withvolcano` selected by default.
+SCHEDULER = "volcano"
+
+# Specifies the queue that will be used in the scheduler, 
+# "default" queue is used this leaves empty.
+QUEUE = 'test'
+
+VOLUME_NAME = 'storage'
+CLAIM_NAME = 'dir-data-claim'
+
 RUNENVS = [
     {
         "os": "Linux",
